@@ -3,11 +3,25 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { packages as defaultPackages } from '../data/packages'
 import { Clock, CheckCircle2, ChevronDown, ChevronUp, Users, ArrowLeft, Check, Sparkles, Calendar } from 'lucide-react'
 
+/**
+ * ============================================================================
+ * TOUR PACKAGE DETAIL PAGE
+ * ============================================================================
+ * Concepts demonstrated:
+ * 1. useParams(): Extracts dynamic URL segment (:id) from /packages/:id.
+ * 2. Merging seed packages with admin-created packages stored in localStorage.
+ * 3. Guest count calculation: dynamic price computation (pricePerPerson * travelers).
+ * 4. Accordion state pattern:
+ *    - openDay stores the number of the currently expanded day.
+ *    - Clicking a day toggles it open/closed (setOpenDay(openDay === dayNum ? null : dayNum)).
+ * 5. LocalStorage booking flow with temporary success banner.
+ */
 export default function PackageDetail() {
+  // Extract package ID from URL parameter (e.g. 'pkg-bali-escape')
   const { id } = useParams()
   const navigate = useNavigate()
 
-  // Find package from default + admin packages
+  // Merge seed packages with any admin-created packages from localStorage
   let allPackages = defaultPackages
   try {
     const adminPkgs = JSON.parse(localStorage.getItem('nd_admin_packages') || '[]')
@@ -16,13 +30,16 @@ export default function PackageDetail() {
     allPackages = defaultPackages
   }
 
+  // Find the package matching the URL ID parameter
   const pkg = allPackages.find((p) => p.id === id)
 
+  // Local state for booking configuration
   const [travelers, setTravelers] = useState(2)
-  const [openDay, setOpenDay] = useState(1) // Open first day by default
+  const [openDay, setOpenDay] = useState(1) // Expand Day 1 by default
   const [toastMessage, setToastMessage] = useState('')
   const [isBooked, setIsBooked] = useState(false)
 
+  // 404 Fallback if package is not found
   if (!pkg) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-20 text-center">
@@ -39,8 +56,13 @@ export default function PackageDetail() {
     )
   }
 
+  // Multiply per-person rate by selected number of travelers
   const totalPrice = pkg.price * travelers
 
+  /**
+   * Booking handler: constructs a standardized booking record and prepends it
+   * to the 'nd_bookings' array in localStorage.
+   */
   const handleBookPackage = () => {
     const booking = {
       id: 'bk-pkg-' + Date.now(),
@@ -67,13 +89,17 @@ export default function PackageDetail() {
     }
   }
 
+  /**
+   * Accordion toggle: if the clicked day is already open, collapse it (null),
+   * otherwise open the clicked day.
+   */
   const toggleDayAccordion = (dayNum) => {
     setOpenDay(openDay === dayNum ? null : dayNum)
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
-      {/* Back button */}
+      {/* Back to Catalog Link */}
       <div>
         <Link
           to="/packages"
@@ -84,7 +110,7 @@ export default function PackageDetail() {
         </Link>
       </div>
 
-      {/* Success Banner Alert */}
+      {/* Success Notification Banner */}
       {toastMessage && (
         <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl flex items-center justify-between shadow-xs animate-in fade-in duration-200">
           <div className="flex items-center gap-3">
@@ -105,9 +131,9 @@ export default function PackageDetail() {
         </div>
       )}
 
-      {/* Hero Title & Image */}
+      {/* Hero Overview Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Image */}
+        {/* Left: Hero Image */}
         <div className="lg:col-span-7">
           <div className="relative rounded-3xl overflow-hidden h-80 sm:h-96 md:h-[420px] shadow-md">
             <img
@@ -122,7 +148,7 @@ export default function PackageDetail() {
           </div>
         </div>
 
-        {/* Right Info Card */}
+        {/* Right: Booking Details & Guests Selection */}
         <div className="lg:col-span-5 bg-white p-6 sm:p-8 rounded-3xl border border-gray-100 shadow-md space-y-6">
           <div>
             <span className="text-xs uppercase font-bold tracking-wider text-[#0d7377] block mb-1">
@@ -144,7 +170,7 @@ export default function PackageDetail() {
             </div>
           </div>
 
-          {/* Travelers Selector */}
+          {/* Guest Count Selector (Buttons) */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
               <Users className="w-4 h-4 text-[#0d7377]" />
@@ -168,12 +194,13 @@ export default function PackageDetail() {
             </div>
           </div>
 
-          {/* Calculation */}
+          {/* Total Cost Display */}
           <div className="bg-teal-50/50 p-4 rounded-2xl border border-teal-100 flex items-center justify-between text-sm">
             <span className="text-gray-600 font-medium">Total Package Cost ({travelers} travelers):</span>
             <span className="text-xl font-bold text-[#0d7377]">${totalPrice}</span>
           </div>
 
+          {/* Book Action Button */}
           <button
             type="button"
             onClick={handleBookPackage}
@@ -185,9 +212,9 @@ export default function PackageDetail() {
         </div>
       </div>
 
-      {/* Inclusions & Day-by-Day Itinerary */}
+      {/* Accordion & Inclusions Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 pt-6">
-        {/* Day-by-Day Accordion */}
+        {/* Day-by-Day Accordion Timeline */}
         <div className="lg:col-span-8 space-y-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Day-by-Day Itinerary</h2>
@@ -205,6 +232,7 @@ export default function PackageDetail() {
                     key={dayItem.day}
                     className="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden transition-all"
                   >
+                    {/* Accordion Header */}
                     <button
                       type="button"
                       onClick={() => toggleDayAccordion(dayItem.day)}
@@ -225,6 +253,7 @@ export default function PackageDetail() {
                       )}
                     </button>
 
+                    {/* Accordion Collapsible Body */}
                     {isOpen && (
                       <div className="px-5 pb-5 pt-1 text-sm text-gray-600 border-t border-gray-50 leading-relaxed bg-gray-50/30">
                         {dayItem.description}

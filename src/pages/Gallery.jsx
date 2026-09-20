@@ -2,10 +2,28 @@ import React, { useState, useEffect } from 'react'
 import { destinations } from '../data/destinations'
 import { Camera, X, Maximize2, MapPin } from 'lucide-react'
 
+/**
+ * ============================================================================
+ * PHOTO GALLERY & LIGHTBOX PAGE
+ * ============================================================================
+ * Key concepts demonstrated:
+ * 1. CSS Masonry Layout:
+ *    - Tailwind utility classes: 'columns-2 md:columns-3 lg:columns-4'
+ *    - 'break-inside-avoid' prevents images from splitting between columns.
+ * 2. Lightbox Modal with pure React state (no third-party modal library).
+ * 3. Keyboard accessibility:
+ *    - useEffect sets up an 'Escape' key listener to close the lightbox.
+ *    - Cleans up the event listener on unmount to avoid memory leaks.
+ * 4. Event Bubbling (e.stopPropagation):
+ *    - Clicking the dark background backdrop closes the modal.
+ *    - Clicking inside the image dialog calls e.stopPropagation() so clicks
+ *      don't bubble up to the backdrop.
+ */
 export default function Gallery() {
+  // Currently selected photo object for lightbox display (or null when closed)
   const [selectedPhoto, setSelectedPhoto] = useState(null)
 
-  // Extra high-resolution photography showcase
+  // Combines destination images with extra high-resolution travel photos
   const galleryItems = [
     ...destinations.map((d) => ({
       id: d.id,
@@ -58,7 +76,10 @@ export default function Gallery() {
     }
   ]
 
-  // Close lightbox on Escape key
+  /**
+   * Keyboard Listener: Listen for 'Escape' key press to dismiss modal.
+   * Cleaned up in the return callback when the component unmounts.
+   */
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') setSelectedPhoto(null)
@@ -83,7 +104,7 @@ export default function Gallery() {
         </p>
       </div>
 
-      {/* Responsive Masonry Grid */}
+      {/* Responsive Masonry Grid (CSS Columns) */}
       <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
         {galleryItems.map((item, index) => (
           <div
@@ -97,7 +118,7 @@ export default function Gallery() {
               loading="lazy"
               className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            {/* Overlay on hover */}
+            {/* Hover Caption Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 flex flex-col justify-end text-white">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-teal-300 mb-0.5">
                 {item.category}
@@ -115,7 +136,8 @@ export default function Gallery() {
         ))}
       </div>
 
-      {/* Lightbox Modal (Conditional render, pure local state) */}
+      {/* ================= LIGHTBOX OVERLAY =================
+          Renders full-screen fixed overlay when selectedPhoto !== null */}
       {selectedPhoto && (
         <div
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
@@ -123,9 +145,9 @@ export default function Gallery() {
         >
           <div
             className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center justify-center"
-            onClick={(e) => e.stopPropagation()} // Prevent close on clicking image content
+            onClick={(e) => e.stopPropagation()} // Stop click from propagating up to backdrop
           >
-            {/* Close Button */}
+            {/* Close (X) Button */}
             <button
               type="button"
               onClick={() => setSelectedPhoto(null)}
@@ -135,7 +157,7 @@ export default function Gallery() {
               <X className="w-7 h-7" />
             </button>
 
-            {/* Enlarged Photo */}
+            {/* Enlarged Photo Container */}
             <div className="rounded-2xl overflow-hidden shadow-2xl bg-black max-h-[75vh] w-auto">
               <img
                 src={selectedPhoto.image}
@@ -144,7 +166,7 @@ export default function Gallery() {
               />
             </div>
 
-            {/* Photo Caption */}
+            {/* Photo Caption Details */}
             <div className="mt-4 text-center text-white">
               <h3 className="text-lg sm:text-xl font-bold">{selectedPhoto.title}</h3>
               <p className="text-xs sm:text-sm text-gray-300 flex items-center justify-center gap-1 mt-1">

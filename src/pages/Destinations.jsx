@@ -5,15 +5,29 @@ import DestinationCard from '../components/DestinationCard'
 import SearchFilterBar from '../components/SearchFilterBar'
 import { Compass, Frown } from 'lucide-react'
 
+/**
+ * ============================================================================
+ * DESTINATIONS CATALOG PAGE
+ * ============================================================================
+ * Concepts demonstrated:
+ * 1. useSearchParams: Reads URL query parameters (e.g., /destinations?search=bali)
+ *    passed from the homepage quick-search form.
+ * 2. useState: Maintains local search query, category selection, and budget filter.
+ * 3. useMemo: Optimizes performance by memoizing the filtered array so the filter
+ *    calculation only re-runs when searchTerm, selectedCategory, or priceRange change.
+ * 4. Conditional Rendering: Renders a friendly empty state if no destinations match.
+ */
 export default function Destinations() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  // Read query parameters from URL: e.g. /destinations?search=paris
+  const [searchParams] = useSearchParams()
   const initialSearch = searchParams.get('search') || ''
 
+  // Filter state variables
   const [searchTerm, setSearchTerm] = useState(initialSearch)
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [priceRange, setPriceRange] = useState('all')
 
-  // Keep query params in sync if url updates
+  // Synchronize state if URL query param changes dynamically
   useEffect(() => {
     const q = searchParams.get('search')
     if (q !== null && q !== searchTerm) {
@@ -21,20 +35,24 @@ export default function Destinations() {
     }
   }, [searchParams])
 
+  /**
+   * Filter computation: runs whenever any filter criteria changes.
+   * Case-insensitive matching across destination name, country, and category.
+   */
   const filteredDestinations = useMemo(() => {
     return destinations.filter((dest) => {
-      // Search term filter (matches name, country, or category)
+      // 1. Text Search Filter (name, country, or category)
       const matchesSearch =
         searchTerm === '' ||
         dest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         dest.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
         dest.category.toLowerCase().includes(searchTerm.toLowerCase())
 
-      // Category filter
+      // 2. Category Filter Pill
       const matchesCategory =
         selectedCategory === 'All' || dest.category.toLowerCase() === selectedCategory.toLowerCase()
 
-      // Price filter
+      // 3. Price Range Dropdown
       let matchesPrice = true
       if (priceRange === 'under-500') {
         matchesPrice = dest.startingPrice < 500
@@ -64,7 +82,7 @@ export default function Destinations() {
         </p>
       </div>
 
-      {/* Filter Component */}
+      {/* Filter Component (Controlled Inputs) */}
       <SearchFilterBar
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -75,7 +93,7 @@ export default function Destinations() {
         placeholder="Filter by destination, country, or keyword..."
       />
 
-      {/* Result stats */}
+      {/* Result Counter & Active Indicator */}
       <div className="flex items-center justify-between mb-6 text-xs text-gray-500 font-medium">
         <span>
           Showing <span className="font-bold text-gray-800">{filteredDestinations.length}</span> of {destinations.length} destinations
@@ -85,7 +103,7 @@ export default function Destinations() {
         )}
       </div>
 
-      {/* Grid of Destination Cards */}
+      {/* Destination Grid or Empty State */}
       {filteredDestinations.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredDestinations.map((dest) => (
@@ -93,6 +111,7 @@ export default function Destinations() {
           ))}
         </div>
       ) : (
+        // Empty State feedback
         <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 max-w-md mx-auto my-12 shadow-xs">
           <div className="w-16 h-16 bg-rose-50 text-[#ff6b6b] rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Frown className="w-8 h-8" />

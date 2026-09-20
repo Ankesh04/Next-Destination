@@ -4,12 +4,27 @@ import { useAuth } from '../context/AuthContext'
 import { packages as defaultPackages } from '../data/packages'
 import { Users, CalendarCheck, Package, DollarSign, ArrowRight, ShieldCheck, TrendingUp, Hotel, Plane } from 'lucide-react'
 
+/**
+ * ============================================================================
+ * ADMIN DASHBOARD OVERVIEW PAGE
+ * ============================================================================
+ * Concepts demonstrated:
+ * 1. Role-based administration: Consumes user info from useAuth() context.
+ * 2. Aggregating analytics from browser localStorage:
+ *    - Total registered users (combines hardcoded seedUsers + nd_registered_users).
+ *    - Total saved bookings (nd_bookings).
+ *    - Active tour packages (defaultPackages + nd_admin_packages).
+ *    - Estimated booking revenue sum calculated via Array.reduce().
+ * 3. Recent activity snapshot: displays the latest 5 bookings dynamically.
+ */
 export default function AdminDashboard() {
+  // Current logged in administrator and helper to retrieve all users
   const { user, getAllUsers } = useAuth()
 
-  // Compute stats
+  // 1. Total user count
   const allUsers = getAllUsers()
 
+  // 2. Read current bookings from localStorage
   const bookings = useMemo(() => {
     try {
       const stored = localStorage.getItem('nd_bookings')
@@ -19,6 +34,7 @@ export default function AdminDashboard() {
     }
   }, [])
 
+  // 3. Read admin-created packages from localStorage
   const adminPackages = useMemo(() => {
     try {
       const stored = localStorage.getItem('nd_admin_packages')
@@ -28,15 +44,17 @@ export default function AdminDashboard() {
     }
   }, [])
 
+  // Total active packages available on the platform
   const totalPackagesCount = defaultPackages.length + adminPackages.length
 
+  // 4. Calculate total revenue sum using Array.reduce()
   const totalRevenue = useMemo(() => {
     return bookings.reduce((sum, b) => sum + (Number(b.totalPrice) || 0), 0)
   }, [bookings])
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Admin Header */}
+      {/* Admin Header & Sub-Navigation */}
       <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-gray-200 gap-4">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 text-[#ff6b6b] text-xs font-semibold mb-2">
@@ -51,7 +69,7 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* Sub-page Navigation Tabs */}
+        {/* Sub-page Quick Navigation Links */}
         <div className="flex flex-wrap gap-2">
           <Link
             to="/admin"
@@ -80,9 +98,9 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* 4 Stat Cards */}
+      {/* 4 Metric KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Total Users */}
+        {/* KPI 1: Users */}
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Total Users</span>
@@ -94,7 +112,7 @@ export default function AdminDashboard() {
           <p className="text-xs text-gray-500">Seed & browser-registered profiles</p>
         </div>
 
-        {/* Total Bookings */}
+        {/* KPI 2: Bookings */}
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Total Bookings</span>
@@ -106,7 +124,7 @@ export default function AdminDashboard() {
           <p className="text-xs text-gray-500">Packages, hotels, & flights saved</p>
         </div>
 
-        {/* Total Packages */}
+        {/* KPI 3: Packages */}
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Active Packages</span>
@@ -118,7 +136,7 @@ export default function AdminDashboard() {
           <p className="text-xs text-gray-500">{adminPackages.length} created by admin</p>
         </div>
 
-        {/* Total Revenue */}
+        {/* KPI 4: Estimated Revenue */}
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Est. Booking Volume</span>
@@ -131,7 +149,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Quick Access Tiles */}
+      {/* Quick Access Action Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Link
           to="/admin/users"
@@ -197,7 +215,7 @@ export default function AdminDashboard() {
         </Link>
       </div>
 
-      {/* Recent Bookings Snapshot */}
+      {/* Recent Customer Bookings List */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-gray-900">Recent Customer Bookings</h3>
